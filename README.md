@@ -1,4 +1,4 @@
-# SSH File Exchange Manager
+# SHUTTLE: SSH File Exchange Manager
 
 A professional-grade, web-based file management system for seamless file transfers between local machines and remote SSH servers. Built with Node.js, Socket.IO, and SSH2.
 
