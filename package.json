@@ -1,0 +1,29 @@
+{
+  "name": "ssh-file-exchange-server",
+  "version": "1.0.0",
+  "description": "SSH File Exchange Manager with real-time file transfer capabilities",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "multer": "^1.4.5-lts.1",
+    "socket.io": "^4.8.1",
+    "ssh2": "^1.17.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "keywords": [
+    "ssh",
+    "sftp",
+    "file-transfer",
+    "socket.io",
+    "real-time"
+  ],
+  "author": "",
+  "license": "MIT"
+}

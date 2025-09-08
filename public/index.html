@@ -1,0 +1,1647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SSH File Exchange Manager - Professional Edition</title>
+    <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0066cc;
+            --primary-dark: #0052a3;
+            --success: #00c853;
+            --warning: #ff9800;
+            --error: #f44336;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f5f7fa;
+            --bg-tertiary: #e9ecef;
+            --text-primary: #212529;
+            --text-secondary: #6c757d;
+            --border: #dee2e6;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.12);
+            --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 1.5rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .header-content {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--bg-secondary);
+            border-radius: 100px;
+            font-size: 0.875rem;
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--error);
+            animation: pulse 2s infinite;
+        }
+
+        .status-indicator.connected {
+            background: var(--success);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Connection Panel */
+        .connection-panel {
+            display: grid;
+            grid-template-columns: auto 1fr 1fr auto auto auto;
+            gap: 0.75rem;
+            align-items: center;
+            padding: 1rem;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+        }
+
+        .connection-panel label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .connection-panel input[type="text"] {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+
+        .connection-panel input[type="text"]:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border);
+        }
+
+        .btn-danger {
+            background: var(--error);
+            color: white;
+        }
+
+        .btn-icon {
+            width: 32px;
+            height: 32px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+            max-width: 1600px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 1rem;
+            gap: 1rem;
+        }
+
+        .file-panel {
+            flex: 1;
+            background: var(--bg-primary);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .panel-header {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg-primary);
+        }
+
+        .panel-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .panel-title h2 {
+            font-size: 1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .panel-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .sort-dropdown {
+            position: relative;
+        }
+
+        .sort-button {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.375rem 0.75rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.813rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .sort-button:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .sort-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 0.25rem;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            box-shadow: var(--shadow-md);
+            min-width: 150px;
+            display: none;
+            z-index: 100;
+        }
+
+        .sort-menu.active {
+            display: block;
+        }
+
+        .sort-option {
+            padding: 0.5rem 0.75rem;
+            font-size: 0.813rem;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .sort-option:hover {
+            background: var(--bg-secondary);
+        }
+
+        .sort-option.active {
+            color: var(--primary);
+            font-weight: 500;
+        }
+
+        .sort-option.active::after {
+            content: '✓';
+            color: var(--primary);
+        }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-size: 0.813rem;
+            color: var(--text-secondary);
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+
+        .breadcrumb-item {
+            cursor: pointer;
+            color: var(--primary);
+            transition: color 0.2s;
+        }
+
+        .breadcrumb-item:hover {
+            color: var(--primary-dark);
+            text-decoration: underline;
+        }
+
+        .breadcrumb-separator {
+            color: var(--text-secondary);
+            margin: 0 0.25rem;
+        }
+
+        .file-list {
+            flex: 1;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .file-list-inner {
+            padding: 0.5rem;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            padding: 0.625rem 0.75rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 2px;
+            user-select: none;
+        }
+
+        .file-item:hover {
+            background: var(--bg-secondary);
+        }
+
+        .file-item.selected {
+            background: rgba(0, 102, 204, 0.1);
+            border: 1px solid rgba(0, 102, 204, 0.3);
+        }
+
+        .file-item.dragging {
+            opacity: 0.5;
+        }
+
+        .file-icon {
+            width: 20px;
+            height: 20px;
+            margin-right: 0.75rem;
+            flex-shrink: 0;
+        }
+
+        .file-name {
+            flex: 1;
+            font-size: 0.875rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .file-size {
+            font-size: 0.813rem;
+            color: var(--text-secondary);
+            margin-left: 1rem;
+        }
+
+        .file-date {
+            font-size: 0.813rem;
+            color: var(--text-secondary);
+            margin-left: 1rem;
+            min-width: 140px;
+        }
+
+        .drop-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 102, 204, 0.05);
+            border: 2px dashed var(--primary);
+            border-radius: 8px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+
+        .drop-overlay.active {
+            display: flex;
+        }
+
+        .drop-message {
+            padding: 2rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: var(--shadow-lg);
+            text-align: center;
+        }
+
+        /* Connection Log */
+        .log-panel {
+            background: var(--bg-primary);
+            border-radius: 8px;
+            box-shadow: var(--shadow-sm);
+            display: none;
+            flex-direction: column;
+            height: 250px;
+            margin: 0 1rem 1rem;
+        }
+
+        .log-panel.active {
+            display: flex;
+        }
+
+        .log-header {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .log-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0.5rem;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.813rem;
+            background: #1e1e1e;
+            color: #d4d4d4;
+        }
+
+        .log-entry {
+            padding: 0.25rem 0.5rem;
+            margin-bottom: 2px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .log-entry.info {
+            color: #4fc3f7;
+        }
+
+        .log-entry.success {
+            color: #66bb6a;
+        }
+
+        .log-entry.error {
+            color: #ef5350;
+            background: rgba(239, 83, 80, 0.1);
+        }
+
+        .log-entry.warning {
+            color: #ffa726;
+        }
+
+        .log-timestamp {
+            color: #666;
+            font-size: 0.75rem;
+            min-width: 140px;
+        }
+
+        /* Progress Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-primary);
+            border-radius: 12px;
+            padding: 1.5rem;
+            max-width: 450px;
+            width: 90%;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .modal-header {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+            border-radius: 4px;
+            transition: width 0.3s ease;
+            position: relative;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            bottom: 1rem;
+            right: 1rem;
+            z-index: 2000;
+        }
+
+        .toast {
+            background: var(--bg-primary);
+            padding: 1rem 1.25rem;
+            border-radius: 8px;
+            box-shadow: var(--shadow-lg);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            min-width: 300px;
+            animation: slideIn 0.3s ease;
+            border-left: 4px solid var(--primary);
+        }
+
+        .toast.success {
+            border-left-color: var(--success);
+        }
+
+        .toast.error {
+            border-left-color: var(--error);
+        }
+
+        .toast.warning {
+            border-left-color: var(--warning);
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* Context Menu */
+        .context-menu {
+            position: fixed;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            box-shadow: var(--shadow-lg);
+            padding: 0.5rem;
+            display: none;
+            z-index: 1000;
+        }
+
+        .context-menu.active {
+            display: block;
+        }
+
+        .context-menu-item {
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            cursor: pointer;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: background 0.2s;
+        }
+
+        .context-menu-item:hover {
+            background: var(--bg-secondary);
+        }
+
+        .context-menu-separator {
+            height: 1px;
+            background: var(--border);
+            margin: 0.25rem 0;
+        }
+
+        /* Loading Spinner */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            color: var(--text-secondary);
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 0.5rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Empty State */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .empty-state-text {
+            font-size: 0.875rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .connection-panel {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <div class="header-top">
+                    <div class="logo">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z"/>
+                        </svg>
+                        SSH File Exchange Manager
+                    </div>
+                    <div class="connection-status">
+                        <div class="status-indicator" id="statusIndicator"></div>
+                        <span id="statusText">Disconnected</span>
+                    </div>
+                </div>
+                
+                <div class="connection-panel">
+                    <input type="file" id="sshKeyFile" style="display: none;" accept=".txt,.pem,.key">
+                    <button class="btn btn-secondary" onclick="document.getElementById('sshKeyFile').click()">
+                        📁 Load SSH Key
+                    </button>
+                    <input type="text" id="sshHost" placeholder="IP Address (e.g., 149.36.0.178)" value="149.36.0.178">
+                    <input type="text" id="sshUser" placeholder="Username (e.g., ubuntu)" value="ubuntu">
+                    <button class="btn btn-primary" id="connectBtn" onclick="connect()">
+                        🔌 Connect
+                    </button>
+                    <button class="btn btn-danger" id="disconnectBtn" onclick="disconnect()" style="display: none;">
+                        ⏻ Disconnect
+                    </button>
+                    <button class="btn btn-secondary btn-icon" onclick="toggleLogs()" title="Connection Logs">
+                        📊
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Connection Log Panel -->
+        <div class="log-panel" id="logPanel">
+            <div class="log-header">
+                <span style="font-weight: 600;">Connection Log</span>
+                <button class="btn btn-secondary btn-icon" onclick="clearLogs()" title="Clear Logs">
+                    🗑️
+                </button>
+            </div>
+            <div class="log-content" id="logContent"></div>
+        </div>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Local Files Panel -->
+            <div class="file-panel">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <h2>💻 Local Files</h2>
+                        <div class="panel-actions">
+                            <div class="sort-dropdown">
+                                <button class="sort-button" onclick="toggleSortMenu('local')">
+                                    ↕️ Sort
+                                </button>
+                                <div class="sort-menu" id="localSortMenu">
+                                    <div class="sort-option" onclick="setSortOption('local', 'name', 'asc')">Name (A-Z)</div>
+                                    <div class="sort-option" onclick="setSortOption('local', 'name', 'desc')">Name (Z-A)</div>
+                                    <div class="sort-option" onclick="setSortOption('local', 'date', 'desc')">Date (Newest)</div>
+                                    <div class="sort-option" onclick="setSortOption('local', 'date', 'asc')">Date (Oldest)</div>
+                                    <div class="sort-option" onclick="setSortOption('local', 'size', 'desc')">Size (Largest)</div>
+                                    <div class="sort-option" onclick="setSortOption('local', 'size', 'asc')">Size (Smallest)</div>
+                                    <div class="sort-option" onclick="setSortOption('local', 'type', 'asc')">Type</div>
+                                </div>
+                            </div>
+                            <button class="btn btn-secondary btn-icon" onclick="createFolder('local')" title="New Folder">📁</button>
+                            <button class="btn btn-secondary btn-icon" onclick="uploadFiles()" title="Upload Files">⬆️</button>
+                            <button class="btn btn-secondary btn-icon" onclick="refreshLocal()" title="Refresh">🔄</button>
+                        </div>
+                    </div>
+                    <div class="breadcrumb" id="localBreadcrumb">
+                        <span class="breadcrumb-item">Loading...</span>
+                    </div>
+                </div>
+                <div class="file-list" id="localFileList">
+                    <div class="drop-overlay" id="localDropOverlay">
+                        <div class="drop-message">
+                            <h3>Drop files here to add</h3>
+                            <p>Files will be added to current directory</p>
+                        </div>
+                    </div>
+                    <div class="file-list-inner" id="localFiles">
+                        <div class="loading">
+                            <div class="spinner"></div>
+                            Loading local files...
+                        </div>
+                    </div>
+                </div>
+                <input type="file" id="fileUpload" multiple style="display: none;">
+            </div>
+
+            <!-- Remote Files Panel -->
+            <div class="file-panel">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <h2>☁️ Remote Server</h2>
+                        <div class="panel-actions">
+                            <div class="sort-dropdown">
+                                <button class="sort-button" onclick="toggleSortMenu('remote')">
+                                    ↕️ Sort
+                                </button>
+                                <div class="sort-menu" id="remoteSortMenu">
+                                    <div class="sort-option" onclick="setSortOption('remote', 'name', 'asc')">Name (A-Z)</div>
+                                    <div class="sort-option" onclick="setSortOption('remote', 'name', 'desc')">Name (Z-A)</div>
+                                    <div class="sort-option" onclick="setSortOption('remote', 'date', 'desc')">Date (Newest)</div>
+                                    <div class="sort-option" onclick="setSortOption('remote', 'date', 'asc')">Date (Oldest)</div>
+                                    <div class="sort-option" onclick="setSortOption('remote', 'size', 'desc')">Size (Largest)</div>
+                                    <div class="sort-option" onclick="setSortOption('remote', 'size', 'asc')">Size (Smallest)</div>
+                                    <div class="sort-option" onclick="setSortOption('remote', 'type', 'asc')">Type</div>
+                                </div>
+                            </div>
+                            <button class="btn btn-secondary btn-icon" onclick="createFolder('remote')" title="New Folder">📁</button>
+                            <button class="btn btn-secondary btn-icon" onclick="downloadSelected()" title="Download Selected">⬇️</button>
+                            <button class="btn btn-secondary btn-icon" onclick="refreshRemote()" title="Refresh">🔄</button>
+                        </div>
+                    </div>
+                    <div class="breadcrumb" id="remoteBreadcrumb">
+                        <span class="breadcrumb-item">Not connected</span>
+                    </div>
+                </div>
+                <div class="file-list" id="remoteFileList">
+                    <div class="drop-overlay" id="remoteDropOverlay">
+                        <div class="drop-message">
+                            <h3>Drop files here to upload</h3>
+                            <p>Files will be uploaded to current directory</p>
+                        </div>
+                    </div>
+                    <div class="file-list-inner" id="remoteFiles">
+                        <div class="empty-state">
+                            <div class="empty-state-icon">🔌</div>
+                            <div class="empty-state-text">Connect to server to view files</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Context Menu -->
+    <div class="context-menu" id="contextMenu">
+        <div class="context-menu-item" onclick="renameFile()">✏️ Rename</div>
+        <div class="context-menu-item" onclick="deleteFile()">🗑️ Delete</div>
+        <div class="context-menu-separator"></div>
+        <div class="context-menu-item" onclick="copyPath()">📋 Copy Path</div>
+        <div class="context-menu-item" onclick="showProperties()">ℹ️ Properties</div>
+    </div>
+
+    <!-- Progress Modal -->
+    <div class="modal" id="progressModal">
+        <div class="modal-content">
+            <div class="modal-header" id="modalTitle">Transfer Progress</div>
+            <div class="progress-info">
+                <span id="progressFileName">filename.txt</span>
+                <span id="progressPercent">0%</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="progress-info">
+                <span id="progressSize">0 MB / 0 MB</span>
+                <span id="progressSpeed"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        // Initialize Socket.IO
+        const socket = io('http://localhost:3000');
+        
+        // State
+        let isConnected = false;
+        let sshKey = null;
+        let currentLocalPath = '';
+        let currentRemotePath = '/home/ubuntu';
+        let selectedFiles = new Set();
+        let contextMenuTarget = null;
+        let draggedFiles = null;
+        
+        // Sorting state
+        let localFiles = [];
+        let remoteFiles = [];
+        let sortOptions = {
+            local: { field: 'name', order: 'asc' },
+            remote: { field: 'name', order: 'asc' }
+        };
+
+        // Socket Events
+        socket.on('connect', () => {
+            console.log('Connected to server');
+            addLog('Connected to local server', 'success');
+        });
+
+        socket.on('initial-setup', (data) => {
+            currentLocalPath = data.defaultPath;
+            socket.emit('list-local-dir', currentLocalPath);
+        });
+
+        socket.on('ssh-connected', (data) => {
+            isConnected = true;
+            updateConnectionStatus(true);
+            showToast(`Connected to ${data.username}@${data.host}`, 'success');
+            document.getElementById('connectBtn').style.display = 'none';
+            document.getElementById('disconnectBtn').style.display = 'inline-flex';
+        });
+
+        socket.on('ssh-disconnected', () => {
+            isConnected = false;
+            updateConnectionStatus(false);
+            showToast('Disconnected from server', 'info');
+            document.getElementById('connectBtn').style.display = 'inline-flex';
+            document.getElementById('disconnectBtn').style.display = 'none';
+            
+            // Clear remote files
+            document.getElementById('remoteFiles').innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">🔌</div>
+                    <div class="empty-state-text">Connect to server to view files</div>
+                </div>
+            `;
+        });
+
+        socket.on('ssh-error', (data) => {
+            showToast(`SSH Error: ${data.error}`, 'error');
+            updateConnectionStatus(false);
+        });
+
+        socket.on('connection-log', (entry) => {
+            addLog(entry.message, entry.type);
+        });
+
+        socket.on('local-files', (data) => {
+            currentLocalPath = data.path;
+            updateBreadcrumb('local', data.path);
+            localFiles = data.files || [];
+            displayFiles('localFiles', localFiles, 'local');
+        });
+
+        socket.on('remote-files', (data) => {
+            currentRemotePath = data.path;
+            updateBreadcrumb('remote', data.path);
+            remoteFiles = data.files || [];
+            displayFiles('remoteFiles', remoteFiles, 'remote');
+        });
+
+        socket.on('transfer-progress', (data) => {
+            updateProgress(data);
+        });
+
+        socket.on('upload-complete', (data) => {
+            hideProgress();
+            showToast(`Uploaded ${data.file} successfully`, 'success');
+            refreshRemote();
+        });
+
+        socket.on('download-complete', (data) => {
+            hideProgress();
+            showToast(`Downloaded ${data.file} to current folder`, 'success');
+            
+            // Refresh local files to show the new download
+            refreshLocal();
+        });
+
+        socket.on('error', (data) => {
+            showToast(data.message, 'error');
+            hideProgress();
+        });
+
+        // SSH Key Handler
+        document.getElementById('sshKeyFile').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    sshKey = event.target.result;
+                    showToast(`SSH key loaded: ${file.name}`, 'success');
+                    addLog(`SSH key loaded: ${file.name}`, 'success');
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        // Connection Functions
+        function connect() {
+            if (!sshKey) {
+                showToast('Please load an SSH key first', 'warning');
+                return;
+            }
+
+            const host = document.getElementById('sshHost').value;
+            const username = document.getElementById('sshUser').value;
+
+            if (!host || !username) {
+                showToast('Please enter host and username', 'warning');
+                return;
+            }
+
+            addLog(`Initiating connection to ${username}@${host}...`, 'info');
+            socket.emit('ssh-connect', {
+                host: host,
+                username: username,
+                privateKey: sshKey
+            });
+        }
+
+        function disconnect() {
+            socket.emit('ssh-disconnect');
+        }
+
+        // File Display
+        function displayFiles(containerId, files, location) {
+            const container = document.getElementById(containerId);
+            
+            if (!files || files.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📂</div>
+                        <div class="empty-state-text">Empty directory</div>
+                    </div>
+                `;
+                return;
+            }
+
+            // Apply current sort
+            const sortOption = sortOptions[location];
+            files = sortFiles(files, sortOption.field, sortOption.order);
+
+            container.innerHTML = '';
+            
+            files.forEach(file => {
+                const item = document.createElement('div');
+                item.className = 'file-item';
+                item.draggable = true;
+                item.dataset.path = file.path;
+                item.dataset.name = file.name;
+                item.dataset.type = file.type;
+                item.dataset.location = location;
+                item.dataset.size = file.size;
+
+                const icon = file.type === 'directory' ? '📁' : getFileIcon(file.name);
+                const date = new Date(file.modified).toLocaleString();
+                
+                item.innerHTML = `
+                    <span class="file-icon">${icon}</span>
+                    <span class="file-name">${file.name}</span>
+                    <span class="file-size">${file.type === 'directory' ? '' : formatFileSize(file.size)}</span>
+                    <span class="file-date">${date}</span>
+                `;
+
+                // Event listeners
+                item.addEventListener('click', (e) => handleFileClick(e, item));
+                item.addEventListener('dblclick', (e) => handleFileDoubleClick(e, file, location));
+                item.addEventListener('dragstart', (e) => handleDragStart(e, file, location));
+                item.addEventListener('contextmenu', (e) => handleContextMenu(e, item));
+
+                container.appendChild(item);
+            });
+        }
+
+        // Sorting functions
+        function sortFiles(files, field, order) {
+            const sorted = [...files].sort((a, b) => {
+                // Directories always come first
+                if (a.type === 'directory' && b.type !== 'directory') return -1;
+                if (a.type !== 'directory' && b.type === 'directory') return 1;
+                
+                let comparison = 0;
+                
+                switch (field) {
+                    case 'name':
+                        comparison = a.name.toLowerCase().localeCompare(b.name.toLowerCase());
+                        break;
+                    case 'date':
+                        comparison = new Date(a.modified) - new Date(b.modified);
+                        break;
+                    case 'size':
+                        comparison = (a.size || 0) - (b.size || 0);
+                        break;
+                    case 'type':
+                        const extA = a.name.split('.').pop().toLowerCase();
+                        const extB = b.name.split('.').pop().toLowerCase();
+                        comparison = extA.localeCompare(extB);
+                        break;
+                    default:
+                        comparison = a.name.localeCompare(b.name);
+                }
+                
+                return order === 'desc' ? -comparison : comparison;
+            });
+            
+            return sorted;
+        }
+
+        function toggleSortMenu(location) {
+            const menu = document.getElementById(`${location}SortMenu`);
+            const otherMenu = document.getElementById(`${location === 'local' ? 'remote' : 'local'}SortMenu`);
+            
+            // Close other menu
+            otherMenu.classList.remove('active');
+            
+            // Toggle current menu
+            menu.classList.toggle('active');
+            
+            // Update active state
+            updateSortMenuActiveState(location);
+        }
+
+        function setSortOption(location, field, order) {
+            sortOptions[location] = { field, order };
+            
+            // Re-display files with new sort
+            const files = location === 'local' ? localFiles : remoteFiles;
+            const containerId = location === 'local' ? 'localFiles' : 'remoteFiles';
+            displayFiles(containerId, files, location);
+            
+            // Close menu
+            document.getElementById(`${location}SortMenu`).classList.remove('active');
+            
+            // Show feedback
+            const sortText = {
+                'name-asc': 'Name (A-Z)',
+                'name-desc': 'Name (Z-A)',
+                'date-desc': 'Date (Newest)',
+                'date-asc': 'Date (Oldest)',
+                'size-desc': 'Size (Largest)',
+                'size-asc': 'Size (Smallest)',
+                'type-asc': 'Type'
+            };
+            
+            showToast(`Sorted by ${sortText[`${field}-${order}`] || field}`, 'info');
+        }
+
+        function updateSortMenuActiveState(location) {
+            const menu = document.getElementById(`${location}SortMenu`);
+            const options = menu.querySelectorAll('.sort-option');
+            const current = sortOptions[location];
+            
+            options.forEach(option => {
+                option.classList.remove('active');
+                const text = option.textContent;
+                
+                if ((current.field === 'name' && current.order === 'asc' && text.includes('Name (A-Z)')) ||
+                    (current.field === 'name' && current.order === 'desc' && text.includes('Name (Z-A)')) ||
+                    (current.field === 'date' && current.order === 'desc' && text.includes('Newest')) ||
+                    (current.field === 'date' && current.order === 'asc' && text.includes('Oldest')) ||
+                    (current.field === 'size' && current.order === 'desc' && text.includes('Largest')) ||
+                    (current.field === 'size' && current.order === 'asc' && text.includes('Smallest')) ||
+                    (current.field === 'type' && text.includes('Type'))) {
+                    option.classList.add('active');
+                }
+            });
+        }
+
+        // Close sort menus when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.sort-dropdown')) {
+                document.querySelectorAll('.sort-menu').forEach(menu => {
+                    menu.classList.remove('active');
+                });
+            }
+        });
+
+        // File Icons
+        function getFileIcon(filename) {
+            const ext = filename.split('.').pop().toLowerCase();
+            const icons = {
+                'py': '🐍', 'js': '📜', 'json': '📊', 'txt': '📝',
+                'pdf': '📄', 'zip': '📦', 'tar': '📦', 'gz': '📦',
+                'jpg': '🖼️', 'jpeg': '🖼️', 'png': '🖼️', 'gif': '🖼️',
+                'mp4': '🎬', 'mp3': '🎵', 'pem': '🔑', 'key': '🔑',
+                'html': '🌐', 'css': '🎨', 'csv': '📊', 'xlsx': '📊',
+                'sh': '⚙️', 'bat': '⚙️', 'exe': '⚡', 'dll': '📚',
+                'log': '📋', 'parquet': '🗃️', 'sql': '🗄️', 'db': '🗄️'
+            };
+            return icons[ext] || '📄';
+        }
+
+        // Format file size
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+        }
+
+        // File Operations
+        function handleFileClick(e, item) {
+            if (!e.ctrlKey && !e.metaKey) {
+                document.querySelectorAll('.file-item').forEach(el => el.classList.remove('selected'));
+                selectedFiles.clear();
+            }
+            
+            item.classList.toggle('selected');
+            if (item.classList.contains('selected')) {
+                selectedFiles.add(item);
+            } else {
+                selectedFiles.delete(item);
+            }
+        }
+
+        function handleFileDoubleClick(e, file, location) {
+            if (file.type === 'directory') {
+                if (location === 'local') {
+                    socket.emit('list-local-dir', file.path);
+                } else {
+                    socket.emit('list-remote-dir', file.path);
+                }
+            }
+        }
+
+        // Drag and Drop
+        function handleDragStart(e, file, location) {
+            draggedFiles = { files: [file], location };
+            e.dataTransfer.effectAllowed = 'copy';
+            e.currentTarget.classList.add('dragging');
+        }
+
+        // Setup drop zones
+        ['local', 'remote'].forEach(location => {
+            const list = document.getElementById(`${location}FileList`);
+            const overlay = document.getElementById(`${location}DropOverlay`);
+            
+            list.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                if (draggedFiles && draggedFiles.location !== location) {
+                    overlay.classList.add('active');
+                }
+            });
+            
+            list.addEventListener('dragleave', (e) => {
+                if (!list.contains(e.relatedTarget)) {
+                    overlay.classList.remove('active');
+                }
+            });
+            
+            list.addEventListener('drop', (e) => {
+                e.preventDefault();
+                overlay.classList.remove('active');
+                
+                document.querySelectorAll('.dragging').forEach(el => el.classList.remove('dragging'));
+                
+                if (draggedFiles && draggedFiles.location !== location) {
+                    transferFiles(draggedFiles.files, draggedFiles.location, location);
+                }
+            });
+        });
+
+        // File Transfer
+        function transferFiles(files, from, to) {
+            files.forEach(file => {
+                if (from === 'local' && to === 'remote') {
+                    uploadFile(file);
+                } else if (from === 'remote' && to === 'local') {
+                    downloadFile(file);
+                }
+            });
+        }
+
+        function uploadFile(file) {
+            if (!isConnected) {
+                showToast('Not connected to server', 'error');
+                return;
+            }
+
+            showProgress(`Uploading ${file.name}`, file.size);
+            
+            const remotePath = currentRemotePath + '/' + file.name;
+            
+            // For local files that exist on server
+            if (file.path) {
+                socket.emit('upload-file', {
+                    localPath: file.path,
+                    remotePath: remotePath,
+                    fileName: file.name,
+                    fileSize: file.size
+                });
+            }
+        }
+
+        function downloadFile(file) {
+            showProgress(`Downloading ${file.name}`, file.size);
+            
+            // FIXED: Use the current local path instead of always using Downloads
+            socket.emit('download-file', {
+                remotePath: file.path,
+                localPath: currentLocalPath + (currentLocalPath.includes('\\') ? '\\' : '/') + file.name
+            });
+        }
+
+        // Upload local files
+        document.getElementById('fileUpload').addEventListener('change', (e) => {
+            const files = Array.from(e.target.files);
+            
+            files.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const remotePath = currentRemotePath + '/' + file.name;
+                    
+                    socket.emit('upload-file', {
+                        remotePath: remotePath,
+                        fileContent: event.target.result.split(',')[1], // Remove data:type;base64, prefix
+                        fileName: file.name,
+                        fileSize: file.size
+                    });
+                };
+                reader.readAsDataURL(file);
+            });
+        });
+
+        function uploadFiles() {
+            if (!isConnected) {
+                showToast('Connect to server first', 'warning');
+                return;
+            }
+            document.getElementById('fileUpload').click();
+        }
+
+        // Breadcrumb Navigation
+        function updateBreadcrumb(location, path) {
+            const container = document.getElementById(`${location}Breadcrumb`);
+            const parts = path.split(/[\\\/]/).filter(p => p);
+            
+            let html = '';
+            
+            if (location === 'remote') {
+                // For remote, always start with root
+                html = '<span class="breadcrumb-item" onclick="navigate(\'remote\', \'/\')">root</span>';
+                
+                let currentPath = '';
+                parts.forEach((part, index) => {
+                    currentPath += '/' + part;
+                    html += '<span class="breadcrumb-separator">/</span>';
+                    html += `<span class="breadcrumb-item" onclick="navigate('remote', '${currentPath}')">${part}</span>`;
+                });
+            } else {
+                // For local (Windows or Unix)
+                let currentPath = '';
+                parts.forEach((part, index) => {
+                    if (index === 0 && part.includes(':')) {
+                        // Windows drive
+                        currentPath = part + '\\';
+                    } else {
+                        currentPath += (currentPath.endsWith('\\') ? '' : (currentPath ? '\\' : '')) + part;
+                    }
+                    
+                    const displayPath = currentPath.replace(/\\/g, '/');
+                    html += `<span class="breadcrumb-item" onclick="navigate('local', '${displayPath}')">${part}</span>`;
+                    
+                    if (index < parts.length - 1) {
+                        html += '<span class="breadcrumb-separator">/</span>';
+                    }
+                });
+            }
+            
+            container.innerHTML = html || '<span class="breadcrumb-item">Root</span>';
+        }
+
+        function navigate(location, path) {
+            // Normalize path for the OS
+            if (location === 'local' && path.includes('/')) {
+                path = path.replace(/\//g, '\\');
+            }
+            
+            if (location === 'local') {
+                socket.emit('list-local-dir', path);
+            } else {
+                socket.emit('list-remote-dir', path);
+            }
+        }
+
+        // Refresh Functions
+        function refreshLocal() {
+            socket.emit('list-local-dir', currentLocalPath);
+            showToast('Refreshing local files...', 'info');
+        }
+
+        function refreshRemote() {
+            if (!isConnected) {
+                showToast('Not connected to server', 'warning');
+                return;
+            }
+            socket.emit('list-remote-dir', currentRemotePath);
+            showToast('Refreshing remote files...', 'info');
+        }
+
+        // Context Menu
+        function handleContextMenu(e, item) {
+            e.preventDefault();
+            contextMenuTarget = item;
+            
+            const menu = document.getElementById('contextMenu');
+            menu.style.left = e.pageX + 'px';
+            menu.style.top = e.pageY + 'px';
+            menu.classList.add('active');
+        }
+
+        document.addEventListener('click', () => {
+            document.getElementById('contextMenu').classList.remove('active');
+        });
+
+        function deleteFile() {
+            if (!contextMenuTarget) return;
+            
+            const name = contextMenuTarget.dataset.name;
+            const path = contextMenuTarget.dataset.path;
+            const type = contextMenuTarget.dataset.type;
+            const location = contextMenuTarget.dataset.location;
+            
+            if (confirm(`Delete ${name}?`)) {
+                if (location === 'local') {
+                    socket.emit('delete-local-file', { path, type });
+                } else {
+                    socket.emit('delete-remote-file', { path, type });
+                }
+            }
+        }
+
+        function renameFile() {
+            if (!contextMenuTarget) return;
+            
+            const oldName = contextMenuTarget.dataset.name;
+            const newName = prompt('New name:', oldName);
+            
+            if (newName && newName !== oldName) {
+                // Implement rename
+                showToast('Rename functionality coming soon', 'info');
+            }
+        }
+
+        function copyPath() {
+            if (!contextMenuTarget) return;
+            
+            const path = contextMenuTarget.dataset.path;
+            navigator.clipboard.writeText(path);
+            showToast('Path copied to clipboard', 'success');
+        }
+
+        function showProperties() {
+            if (!contextMenuTarget) return;
+            
+            const name = contextMenuTarget.dataset.name;
+            const size = formatFileSize(contextMenuTarget.dataset.size);
+            const type = contextMenuTarget.dataset.type;
+            
+            alert(`Name: ${name}\nType: ${type}\nSize: ${size}`);
+        }
+
+        function createFolder(location) {
+            const name = prompt('Folder name:');
+            if (!name) return;
+            
+            if (location === 'local') {
+                const path = currentLocalPath + (currentLocalPath.includes('\\') ? '\\' : '/') + name;
+                socket.emit('create-local-dir', { path });
+            } else {
+                const path = currentRemotePath + '/' + name;
+                socket.emit('create-remote-dir', { path });
+            }
+        }
+
+        function downloadSelected() {
+            if (selectedFiles.size === 0) {
+                showToast('No files selected', 'warning');
+                return;
+            }
+            
+            selectedFiles.forEach(item => {
+                const file = {
+                    path: item.dataset.path,
+                    name: item.dataset.name,
+                    size: item.dataset.size
+                };
+                downloadFile(file);
+            });
+        }
+
+        // Progress Modal
+        function showProgress(title, totalSize) {
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('progressFileName').textContent = title;
+            document.getElementById('progressPercent').textContent = '0%';
+            document.getElementById('progressSize').textContent = `0 MB / ${formatFileSize(totalSize)}`;
+            document.getElementById('progressFill').style.width = '0%';
+            document.getElementById('progressModal').classList.add('active');
+        }
+
+        function updateProgress(data) {
+            document.getElementById('progressPercent').textContent = `${data.progress}%`;
+            document.getElementById('progressFill').style.width = `${data.progress}%`;
+            
+            if (data.downloaded !== undefined && data.total !== undefined) {
+                const downloaded = formatFileSize(data.downloaded);
+                const total = formatFileSize(data.total);
+                document.getElementById('progressSize').textContent = `${downloaded} / ${total}`;
+            } else if (data.uploaded !== undefined && data.total !== undefined) {
+                const uploaded = formatFileSize(data.uploaded);
+                const total = formatFileSize(data.total);
+                document.getElementById('progressSize').textContent = `${uploaded} / ${total}`;
+            }
+        }
+
+        function hideProgress() {
+            setTimeout(() => {
+                document.getElementById('progressModal').classList.remove('active');
+            }, 500);
+        }
+
+        // Connection Status
+        function updateConnectionStatus(connected) {
+            const indicator = document.getElementById('statusIndicator');
+            const text = document.getElementById('statusText');
+            
+            if (connected) {
+                indicator.classList.add('connected');
+                text.textContent = `Connected to ${document.getElementById('sshUser').value}@${document.getElementById('sshHost').value}`;
+            } else {
+                indicator.classList.remove('connected');
+                text.textContent = 'Disconnected';
+            }
+        }
+
+        // Logging
+        function toggleLogs() {
+            const panel = document.getElementById('logPanel');
+            panel.classList.toggle('active');
+            
+            if (panel.classList.contains('active')) {
+                const content = document.getElementById('logContent');
+                content.scrollTop = content.scrollHeight;
+            }
+        }
+
+        function addLog(message, type = 'info') {
+            const content = document.getElementById('logContent');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            
+            const timestamp = new Date().toLocaleTimeString();
+            entry.innerHTML = `
+                <span class="log-timestamp">${timestamp}</span>
+                <span>${message}</span>
+            `;
+            
+            content.appendChild(entry);
+            content.scrollTop = content.scrollHeight;
+        }
+
+        function clearLogs() {
+            document.getElementById('logContent').innerHTML = '';
+            socket.emit('clear-logs');
+            addLog('Logs cleared', 'info');
+        }
+
+        // Toast Notifications
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            const icons = {
+                'success': '✅',
+                'error': '❌',
+                'warning': '⚠️',
+                'info': 'ℹ️'
+            };
+            
+            toast.innerHTML = `
+                <span>${icons[type] || icons.info}</span>
+                <span>${message}</span>
+            `;
+            
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideIn 0.3s ease reverse';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Keyboard Shortcuts
+        document.addEventListener('keydown', (e) => {
+            // Ctrl+A - Select all
+            if ((e.ctrlKey || e.metaKey) && e.key === 'a') {
+                const activePanel = document.activeElement.closest('.file-panel');
+                if (activePanel) {
+                    e.preventDefault();
+                    const items = activePanel.querySelectorAll('.file-item');
+                    items.forEach(item => {
+                        item.classList.add('selected');
+                        selectedFiles.add(item);
+                    });
+                }
+            }
+            
+            // Delete - Delete selected
+            if (e.key === 'Delete') {
+                if (selectedFiles.size > 0) {
+                    const first = Array.from(selectedFiles)[0];
+                    contextMenuTarget = first;
+                    deleteFile();
+                }
+            }
+            
+            // F5 - Refresh
+            if (e.key === 'F5') {
+                e.preventDefault();
+                refreshLocal();
+                if (isConnected) refreshRemote();
+            }
+            
+            // Escape - Clear selection
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.file-item').forEach(el => el.classList.remove('selected'));
+                selectedFiles.clear();
+            }
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check server connection
+            setTimeout(() => {
+                if (!socket.connected) {
+                    showToast('Cannot connect to local server. Make sure server.js is running on port 3000', 'error');
+                    addLog('Failed to connect to local server. Run: node server.js', 'error');
+                    
+                    // Show error state in local files panel
+                    document.getElementById('localFiles').innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">⚠️</div>
+                            <div class="empty-state-text">Cannot connect to local server<br>Please run: node server.js</div>
+                        </div>
+                    `;
+                }
+            }, 2000);
+            
+            // If local files don't load within 5 seconds, show error
+            setTimeout(() => {
+                const localFilesContainer = document.getElementById('localFiles');
+                if (localFilesContainer.innerHTML.includes('Loading local files')) {
+                    console.log('Local files failed to load, requesting again...');
+                    
+                    // Try to request local files again
+                    if (currentLocalPath) {
+                        socket.emit('list-local-dir', currentLocalPath);
+                    } else {
+                        // Request default path
+                        socket.emit('list-local-dir', 'C:\\Users\\Downloads');
+                    }
+                    
+                    // If still not loaded after retry, show error
+                    setTimeout(() => {
+                        if (localFilesContainer.innerHTML.includes('Loading local files')) {
+                            localFilesContainer.innerHTML = `
+                                <div class="empty-state">
+                                    <div class="empty-state-icon">⚠️</div>
+                                    <div class="empty-state-text">
+                                        Failed to load local files<br>
+                                        <button class="btn btn-primary" onclick="refreshLocal()">Retry</button>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    }, 2000);
+                }
+            }, 5000);
+        });
+
+        // Prevent default drag over
+        document.addEventListener('dragover', (e) => e.preventDefault());
+        document.addEventListener('drop', (e) => e.preventDefault());
+    </script>
+</body>
+</html>
